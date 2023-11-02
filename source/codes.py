@@ -34,7 +34,7 @@ CODES = {
         "values": ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
         "prefixes": ["-", "/", "."],
         "suffixes": ["-", "/", "."],
-        "regex": "[]"
+        "regex": "0[1-9]|[1-2][0-9]|3[0-1]"
     },
     "%-d": {
         "description": "Day of the month as a decimal number. (Platform specific)",
@@ -42,6 +42,7 @@ CODES = {
         "values": ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
         "prefixes": ["-", "/", "."],
         "suffixes": ["-", "/", "."],
+        "regex": "[1-9]|[1-2][0-9]|[0-1]"
     },
     "%b": {
         "description": "Month as locale’s abbreviated name.",
@@ -49,6 +50,7 @@ CODES = {
         "values": ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'],
         "prefixes": [],
         "suffixes": [],
+        "regex": "|".join(['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'])
     },
     "%B": {
         "description": "Month as locale’s full name.",
@@ -56,6 +58,7 @@ CODES = {
         "values": ['january', 'february', 'march', 'april', 'may', 'jun', 'july', 'august', 'september', 'october', 'november', 'december'],
         "prefixes": [],
         "suffixes": [],
+        "regex": "|".join(['january', 'february', 'march', 'april', 'may', 'jun', 'july', 'august', 'september', 'october', 'november', 'december'])
     },
     "%m": {
         "description": "Month as a zero-padded decimal number.",
@@ -63,6 +66,7 @@ CODES = {
         "values": ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12',],
         "prefixes": ["-", "/", "."],
         "suffixes": ["-", "/", "."],
+        "regex": "0[1-9]|1[0-2]"
     },
     "%-m": {
         "description": "Month as a decimal number. (Platform specific)",
@@ -70,6 +74,7 @@ CODES = {
         "values": ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12',],
         "prefixes": ["-", "/", "."],
         "suffixes": ["-", "/", "."],
+        "regex": "[0-9]|1[0-2]"
     },
     "%y": {
         "description": "Year without century as a zero-padded decimal number.",
@@ -77,6 +82,7 @@ CODES = {
         "values": [*[f"0{x}" for x in range(10)], *[str(y) for y in range(10, 100)]],
         "prefixes": [],
         "suffixes": [],
+        "regex": "\d{4}"
     },
     "%Y": {
         "description": "Year with century as a decimal number.",
@@ -84,6 +90,7 @@ CODES = {
         "values": [str(x) for x in range(5000)],
         "prefixes": [],
         "suffixes": [],
+        "regex": "\d{1,4}"
     },
     "%H": {
         "description": "Hour (24-hour clock) as a zero-padded decimal number.",
@@ -91,6 +98,7 @@ CODES = {
         "values": [*[f"0{x}" for x in range(10)], *[str(y) for y in range(10, 24)]],
         "prefixes": [":"],
         "suffixes": [":"],
+        "regex": "0[0-9]|1[0-9]|2[0-4]"
     },
     "%-H": {
         "description": "Hour (24-hour clock) as a decimal number. (Platform specific)",
@@ -98,6 +106,7 @@ CODES = {
         "values": [str(x) for x in range(24)],
         "prefixes": [":"],
         "suffixes": [":"],
+        "regex": "[0-9]|1[0-9]|2[0-4]"
     },
     "%I": {
         "description": "Hour (12-hour clock) as a zero-padded decimal number.",
@@ -105,6 +114,7 @@ CODES = {
         "values": [*[f"0{x}" for x in range(10)], *[str(y) for y in range(10, 13)]],
         "prefixes": [":"],
         "suffixes": [":"],
+        "regex": "0[0-9]|1[0-2]"
     },
     "%-I": {
         "description": "Hour (12-hour clock) as a decimal number. (Platform specific)",
@@ -112,6 +122,7 @@ CODES = {
         "values": [str(x) for x in range(13)],
         "prefixes": [":"],
         "suffixes": [":"],
+        "regex": "[0-9]|1[0-2]"
     },
     "%p": {
         "description": "Locale’s equivalent of either AM or PM.",
