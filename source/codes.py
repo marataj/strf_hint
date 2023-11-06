@@ -2,7 +2,8 @@
 This module contains datetime codes.
 
 """
-
+from typing import Literal, Optional
+import re
 
 class BasicCodes:
     """
@@ -286,13 +287,80 @@ class BasicCodes:
         },
     }
     PREFIX = ["cw", "wk", "day", "week", "time"]
-    @staticmethod
-    def get_regex(self, code: str):
+    def get_regex(self, code: str, affix: Optional[Literal["False", "Word-border", "True"]]="False"):
         # TODO: Add optional parameter, that allow to include prefix/suffix, otherwise use default \b(...)\b construct
         #  or without any additional parts
         try:
-            return self.CODES[code]["regex"]
+            if affix == "False":
+                return self.CODES[code]["regex"]
+            if affix == "Word-border":
+                return rf"\b({self.CODES[code]['regex']})\b"
+            if affix == "True":
+                return rf"{self.CODES[code]['prefix']}{self.CODES[code]['regex']}{self.CODES[code]['suffix']}"
         except KeyError:
             return None
 
 
+class CodesSets(BasicCodes):
+    """
+    Functional class responsible for recognizing common used date/time formats.
+
+    23/11/06
+    06/11/23
+    11/30/23
+    11/30/2023
+    11-30-2023
+    06/11/2023
+    06.11.2023
+    06-11-2023
+    March 11, 2023
+    11 March 2023
+    March 03, 2023
+    11-Mar-2023
+    Friday, March 11, 2023
+    Fri, Mar 11, 2023
+    March 11th, 2023
+    -----
+    3:30 PM
+    15:20
+    03:30 PM
+    03:30
+    3:30:45 PM
+    15:30:45
+
+    """
+    def year_month_day_recognize(self, text):
+        """
+        Method responsible for recognize year month day pattern, separated using one of following ,.-/\ .
+        2023-11-06
+        2023.11.06
+        2023/11/06
+        TBD
+        TODO: extend this method with different order of year, month and day
+        """
+
+        regex = fr"{self.get_regex('%Y')}(?P<sep1>[,.-/\\]){self.get_regex('%m')}(?P<sep2>[,.-/\\]){self.get_regex('%d')}"
+        result = re.search(regex, text)
+        if not result:
+            return None
+        return f"%Y{result['sep1']}%m{result['sep2']}%d", result.span()
+
+    def short_year_recognizer(self, text):
+        """
+        Method responsible for recognizing the common date formats with shorted year number.
+        23/11/06 %y/%m/%d
+        06/11/23 %d/
+        11/30/23
+        :param text:
+        :return:
+        """
+
+    CODESS_SETS = {
+        "%Y-%m-%d": {
+            "example": "2023-11-06",
+            "type": "date",
+            "prefix": "",
+            "suffix": "",
+            "regex": f"{}-{}-{}"
+        },
+    }
