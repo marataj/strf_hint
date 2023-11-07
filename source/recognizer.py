@@ -1,4 +1,4 @@
-from source.codes import BasicCodes
+from source.StrfCodes import StrfCodes
 import string
 import re
 from typing import List
@@ -6,12 +6,22 @@ from typing import List
 d='2023-10-24  11:27AM'
 
 
-class Formatter(BasicCodes):
+class Recognizer(StrfCodes):
 
     IGNORABLE = ["cw", "wk", "day", "week", "time"]
 
     def __init__(self):
         pass
+
+    def recognize_common_patterns(self, s: str):
+        temp = s
+        for group in self.DATE_COMMON_FORMATS+self.TIME_COMMON_FORMATS:
+            group_regex=self.generate_format_regex(group)
+            match = re.search(group_regex, temp.lower())
+            if match:
+                temp = temp.replace(match.group(), group)
+
+        return temp.replace("\\", "")
 
     def _check_string_group(self, s: str):
         for name, group in [("digits", string.digits), ("letters", string.ascii_lowercase+string.ascii_uppercase), ("punctuation", string.punctuation),

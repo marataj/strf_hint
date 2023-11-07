@@ -4,13 +4,15 @@ This module contains datetime codes.
 """
 from typing import Literal, Optional
 import re
+import functools
 
-class BasicCodes:
+
+class StrfCodes:
     """
     This class is a container for strf datetime codes related data.
 
     """
-    CODES = {
+    BASIC_CODES = {
         "%a": {
             "description": "Weekday as locale’s abbreviated name.",
             "example": "Sun",
@@ -286,81 +288,99 @@ class BasicCodes:
             "regex": "%"
         },
     }
+    DATE_COMMON_FORMATS = [
+        "%Y-%m-%d", "%Y\.%m\.%d", "%Y/%m/%d", "%Y,%m,%d",
+        "%d-%m-%Y", "%d\.%m\.%Y", "%d/%m/%Y", "%d,%m,%Y",
+        "%m-%d-%Y", "%m\.%d\.%Y", "%m/%d/%Y", "%m,%d,%Y",
+
+        "%Y-%m-%-d", "%Y\.%m\.%-d", "%Y/%m/%-d",  "%Y,%m,%-d",
+        "%-d-%m-%Y", "%-d\.%m\.%Y", "%-d/%m/%Y",  "%-d,%m,%Y",
+        "%m-%-d-%Y", "%m\.%-d\.%Y", "%m/%-d/%Y",  "%m,%-d,%Y",
+
+        "%y-%m-%d", "%y\.%m\.%d", "%y/%m/%d", "%y,%m,%d",
+        "%d-%m-%y", "%d\.%m\.%y", "%d/%m/%y", "%d,%m,%y",
+        "%m-%d-%y", "%m\.%d\.%y", "%m/%d/%y", "%m,%d,%y",
+
+        "%y-%m-%-d", "%y\.%m\.%-d", "%y/%m/%-d",  "%y,%m,%-d",
+        "%-d-%m-%y", "%-d\.%m\.%y", "%-d/%m/%y",  "%-d,%m,%y",
+        "%m-%-d-%y", "%m\.%-d\.%y", "%m/%-d/%y",  "%m,%-d,%y",
+
+        "%B %d, %Y", "%B %-d, %Y", "%B %d %Y", "%B %-d %Y",
+
+        "%B-%d-%Y", "%B\.%d\.%Y", "%B/%d/%Y", "%B,%d,%Y",
+        "%d-%B-%Y", "%d\.%B\.%Y", "%d/%B/%Y", "%d,%B,%Y",
+        "%Y-%B-%d", "%Y\.%B\.%d", "%Y/%B/%d", "%Y,%B,%d",
+        "%B-%-d-%Y", "%B\.%-d\.%Y", "%B/%-d/%Y",  "%B,%-d,%Y",
+        "%-d-%B-%Y", "%-d\.%B\.%Y", "%-d/%B/%Y",  "%-d,%B,%Y",
+        "%Y-%B-%-d", "%Y\.%B\.%-d", "%Y/%B/%-d",  "%Y,%B,%-d",
+        "%B-%d-%y", "%B\.%d\.%y", "%B/%d/%y", "%B,%d,%y",
+        "%d-%B-%y", "%d\.%B\.%y", "%d/%B/%y", "%d,%B,%y",
+        "%y-%B-%d", "%y\.%B\.%d", "%y/%B/%d", "%y,%B,%d",
+        "%B-%-d-%y", "%B\.%-d\.%y", "%B/%-d/%y",  "%B,%-d,%y",
+        "%-d-%B-%y", "%-d\.%B\.%y", "%-d/%B/%y",  "%-d,%B,%y",
+        "%y-%B-%-d", "%y\.%B\.%-d", "%y/%B/%-d",  "%y,%B,%-d",
+
+        "%b %d, %Y", "%b %-d, %Y", "%b %d %Y", "%b %-d %Y",
+
+        "%b-%d-%Y", "%b\.%d\.%Y", "%b/%d/%Y", "%b,%d,%Y",
+        "%d-%b-%Y", "%d\.%b\.%Y", "%d/%b/%Y", "%d,%b,%Y",
+        "%Y-%b-%d", "%Y\.%b\.%d", "%Y/%b/%d", "%Y,%b,%d",
+        "%b-%-d-%Y", "%b\.%-d\.%Y", "%b/%-d/%Y",  "%b,%-d,%Y",
+        "%-d-%b-%Y", "%-d\.%b\.%Y", "%-d/%b/%Y",  "%-d,%b,%Y",
+        "%Y-%b-%-d", "%Y\.%b\.%-d", "%Y/%b/%-d",  "%Y,%b,%-d",
+        "%b-%d-%y", "%b\.%d\.%y", "%b/%d/%y", "%b,%d,%y",
+        "%d-%b-%y", "%d\.%b\.%y", "%d/%b/%y", "%d,%b,%y",
+        "%y-%b-%d", "%y\.%b\.%d", "%y/%b/%d", "%y,%b,%d",
+        "%b-%-d-%y", "%b\.%-d\.%y", "%b/%-d/%y",  "%b,%-d,%y",
+        "%-d-%b-%y", "%-d\.%b\.%y", "%-d/%b/%y",  "%-d,%b,%y",
+        "%y-%b-%-d", "%y\.%b\.%-d", "%y/%b/%-d",  "%y,%b,%-d",
+    ]
+    TIME_COMMON_FORMATS = [
+        "%-I:%M %p", "%-I\.%M %p",
+        "%I:%M %p", "%I\.%M %p",
+        "%-I:%-M %p", "%-I\.%-M %p",
+        "%I:%-M %p", "%I\.%-M %p",
+        "%H:%M", "%H\.%M",
+        "%-H:%M", "%-H\.%M",
+        "%H:%-M", "%H\.%-M",
+        "%-H:%-M", "%-H\.%-M",
+
+        "%-I%p", "%I%p","%-I %p", "%I %p",
+
+        "%I:%M:%S %p", "%I\.%M\.%S %p",
+        "%-I:%M:%S %p", "%-I\.%M\.%S %p",
+        "%I:%-M:%S %p", "%I\.%-M\.%S %p",
+        "%-I:%-M:%S %p", "%-I\.%-M\.%S %p",
+        "%I:%M:%S%p", "%I\.%M\.%S%p",
+        "%-I:%M:%S%p", "%-I\.%M\.%S%p",
+        "%I:%-M:%S%p", "%I\.%-M\.%S%p",
+        "%-I:%-M:%S%p", "%-I\.%-M\.%S%p",
+
+        "%H:%M:%S", "%H\.%M\.%S",
+        "%-H:%M:%S", "%-H\.%M\.%S",
+        "%H:%-M:%S", "%H\.%-M\.%S",
+        "%-H:%-M:%S", "%-H\.%-M\.%S",
+    ]
     PREFIX = ["cw", "wk", "day", "week", "time"]
-    def get_regex(self, code: str, affix: Optional[Literal["False", "Word-border", "True"]]="False"):
-        # TODO: Add optional parameter, that allow to include prefix/suffix, otherwise use default \b(...)\b construct
-        #  or without any additional parts
+
+    @functools.lru_cache()
+    def get_regex(self, code: str, affix: Optional[Literal["False", "Word-border", "True"]] = "False"):
         try:
             if affix == "False":
-                return self.CODES[code]["regex"]
+                return self.BASIC_CODES[code]["regex"]
             if affix == "Word-border":
-                return rf"\b({self.CODES[code]['regex']})\b"
+                return rf"\b({self.BASIC_CODES[code]['regex']})\b"
             if affix == "True":
-                return rf"{self.CODES[code]['prefix']}{self.CODES[code]['regex']}{self.CODES[code]['suffix']}"
+                return rf"{self.BASIC_CODES[code]['prefix']}{self.BASIC_CODES[code]['regex']}{self.BASIC_CODES[code]['suffix']}"
         except KeyError:
             return None
 
+    @functools.lru_cache()
+    def generate_format_regex(self, code_group: str):
+        for match in re.finditer("%-?[aAwdbBmyYHIpMSfzZjUWcxX%]", code_group):
+            code = match.group()
+            regex = f"({self.get_regex(code)})"
+            if regex:
+                code_group = code_group.replace(code, regex)
 
-class CodesSets(BasicCodes):
-    """
-    Functional class responsible for recognizing common used date/time formats.
-
-    23/11/06
-    06/11/23
-    11/30/23
-    11/30/2023
-    11-30-2023
-    06/11/2023
-    06.11.2023
-    06-11-2023
-    March 11, 2023
-    11 March 2023
-    March 03, 2023
-    11-Mar-2023
-    Friday, March 11, 2023
-    Fri, Mar 11, 2023
-    March 11th, 2023
-    -----
-    3:30 PM
-    15:20
-    03:30 PM
-    03:30
-    3:30:45 PM
-    15:30:45
-
-    """
-    def year_month_day_recognize(self, text):
-        """
-        Method responsible for recognize year month day pattern, separated using one of following ,.-/\ .
-        2023-11-06
-        2023.11.06
-        2023/11/06
-        TBD
-        TODO: extend this method with different order of year, month and day
-        """
-
-        regex = fr"{self.get_regex('%Y')}(?P<sep1>[,.-/\\]){self.get_regex('%m')}(?P<sep2>[,.-/\\]){self.get_regex('%d')}"
-        result = re.search(regex, text)
-        if not result:
-            return None
-        return f"%Y{result['sep1']}%m{result['sep2']}%d", result.span()
-
-    def short_year_recognizer(self, text):
-        """
-        Method responsible for recognizing the common date formats with shorted year number.
-        23/11/06 %y/%m/%d
-        06/11/23 %d/
-        11/30/23
-        :param text:
-        :return:
-        """
-
-    CODESS_SETS = {
-        "%Y-%m-%d": {
-            "example": "2023-11-06",
-            "type": "date",
-            "prefix": "",
-            "suffix": "",
-            "regex": f"{}-{}-{}"
-        },
-    }
+        return fr"{code_group}"
