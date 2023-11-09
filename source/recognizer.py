@@ -16,10 +16,10 @@ class Recognizer(StrfCodes):
     def recognize_common_patterns(self, s: str):
         temp = s
         for group in self.DATE_COMMON_FORMATS+self.TIME_COMMON_FORMATS:
-            group_regex=self.generate_format_regex(group)
+            group_regex = self.generate_format_regex(group)
             match = re.search(group_regex, temp.lower())
             if match:
-                temp = temp.replace(match.group(), group)
+                temp = temp[:match.span()[0]]+group+temp[match.span()[1]:]
 
         return temp.replace("\\", "")
 
