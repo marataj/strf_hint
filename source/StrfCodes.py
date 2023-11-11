@@ -17,24 +17,24 @@ class StrfCodes:
             "description": "Weekday as locale’s abbreviated name.",
             "example": "Sun",
             "type": "day",
-            "prefix": [],
-            "suffix": [],
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": r"|".join(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])
         },
         "%A": {
             "description": "Weekday as locale’s full name.",
             "example": "Sunday",
             "type": "day",
-            "prefix": [],
-            "suffix": [],
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": r"|".join(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
         },
         "%b": {
             "description": "Month as locale’s abbreviated name.",
             "example": "Sep",
             "type": "month",
-            "prefix": [],
-            "suffix": [],
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": "|".join(
                 ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'])
         },
@@ -42,8 +42,8 @@ class StrfCodes:
             "description": "Month as locale’s full name.",
             "example": "September",
             "type": "month",
-            "prefix": [],
-            "suffix": [],
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": "|".join(
                 ['january', 'february', 'march', 'april', 'may', 'jun', 'july', 'august', 'september', 'october',
                  'november', 'december'])
@@ -126,8 +126,8 @@ class StrfCodes:
             "description": "Locale’s equivalent of either AM or PM.",
             "example": "AM",
             "type": "am/pm",
-            "prefix": "",
-            "suffix": "",
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": r"am|pm"
         },
         "%M": {
@@ -174,8 +174,8 @@ class StrfCodes:
             "description": "Time zone name (empty string if the object is naive).",
             "example": "UTC",
             "type": "timezone",
-            "prefix": "",
-            "suffix": "",
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": "|".join(
                 ['acdt', 'acst', 'act', 'act', 'acwst', 'adt', 'aedt', 'aest', 'aet (aest/aedt)', 'aft', 'akdt', 'akst',
                  'almt', 'amst', 'amt', 'amt', 'anat', 'aqtt', 'art', 'ast', 'ast', 'awst', 'azost', 'azot', 'azt',
@@ -198,16 +198,16 @@ class StrfCodes:
             "description": "Day of the year as a zero-padded decimal number.",
             "example": "251",
             "type": "yearday",
-            "prefix": "",
-            "suffix": "",
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": r"00\d|0\d\d|[1-2]\d\d|3[0-6][0-6]"
         },
         "%-j": {
             "description": "Day of the year as a decimal number. (Platform specific)",
             "example": "251",
             "type": "yearday",
-            "prefix": "",
-            "suffix": "",
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": r"\d|\d\d|[1-2]\d{2}|3[0-6]{2}"
         },
         "%U": {
@@ -246,8 +246,8 @@ class StrfCodes:
             "description": "Weekday as a decimal number, where 0 is Sunday and 6 is Saturday.",
             "example": '0',
             "type": "weekday number",
-            "prefix": "",
-            "suffix": "",
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": r"[0-6]"
         },
         "%y": {
@@ -263,28 +263,28 @@ class StrfCodes:
         #     "example": "Sun Sep 8 07:06:05 2013",
         #     "prefix": [],
         #     "suffix": [],
-        #     "regex": ""
+        #     "regex": r""
         # },
         # "%x": {
         #     "description": "Locale’s appropriate date representation.",
         #     "example": '09/08/13',
         #     "prefix": [],
         #     "suffix": [],
-        #     "regex": ""
+        #     "regex": r""
         # },
         # "%X": {
         #     "description": "Locale’s appropriate time representation.",
         #     "example": '07:06:05',
         #     "prefix": [],
         #     "suffix": [],
-        #     "regex": ""
+        #     "regex": r""
         # },
         "%%": {
             "description": "A literal '%' character.",
             "example": "%",
             "type": "literal",
-            "prefix": "",
-            "suffix": "",
+            "prefix": r"\b",
+            "suffix": r"\b",
             "regex": "%"
         },
     }
@@ -371,9 +371,12 @@ class StrfCodes:
             if affix == "Word-border":
                 return rf"\b({self.BASIC_CODES[code]['regex']})\b"
             if affix == "True":
-                return rf"{self.BASIC_CODES[code]['prefix']}{self.BASIC_CODES[code]['regex']}{self.BASIC_CODES[code]['suffix']}"
+                return rf"{self.BASIC_CODES[code]['prefix']}({self.BASIC_CODES[code]['regex']}){self.BASIC_CODES[code]['suffix']}"
         except KeyError:
             return None
+
+    def get_type(self, code: str):
+        return self.BASIC_CODES[code]["type"]
 
     @functools.lru_cache()
     def generate_format_regex(self, code_group: str):
