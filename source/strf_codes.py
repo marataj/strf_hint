@@ -801,7 +801,7 @@ class StrfCodes:
             return None
 
     @functools.lru_cache
-    def get_type(self, code: str) -> str:
+    def get_type(self, code: str) -> FieldTypes:
         """
         Method responsible for retrieving a type of particular strf-code.
 
@@ -812,7 +812,7 @@ class StrfCodes:
 
         Returns
         -------
-        `str`
+        `FieldTypes`
             Type of a particular code.
         """
         return self.BASIC_CODES[code]["type"]
