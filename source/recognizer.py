@@ -3,7 +3,7 @@ import re
 import string
 from typing import List, Tuple
 
-from source.StrfCodes import StrfCodes
+from source.StrfCodes import FieldTypes, StrfCodes
 
 
 class Recognizer(StrfCodes):
@@ -12,7 +12,11 @@ class Recognizer(StrfCodes):
 
     """
 
-    def _recognize_common_patterns(self, s: str) -> Tuple[str, str]:
+    def __init__(self):
+        super().__init__()
+        self.matched_types: List[FieldTypes] = []
+
+    def _match_patterns(self, s: str) -> Tuple[str, str]:
         """
         Method responsible for recognizing predefined common patterns of strf-codes.
 
@@ -23,7 +27,7 @@ class Recognizer(StrfCodes):
 
         Returns
         -------
-        `Tuple`[`str`, `str`]
+        `Tuple`[`str`, `str`, List[`FieldTypes`]]
             Tuple contains two strings: index 0 -> input text with recognized part replaced with the proper strf-codes.
             index 1 -> match_mask, which indicates which elements of returned string were matched. 0 means not matched;
             1 means matched.
@@ -31,6 +35,7 @@ class Recognizer(StrfCodes):
         """
         temp_s = s
         match_mask = "0" * len(s)
+
         for group in self.DATE_COMMON_FORMATS + self.TIME_COMMON_FORMATS:
             group_regex = self._generate_format_regex(group)
             match = re.search(group_regex, temp_s.lower())
@@ -41,6 +46,7 @@ class Recognizer(StrfCodes):
                     + "1" * len(group)
                     + match_mask[match.span()[1] :]
                 )
+                self.matched_types += self._get_format_types(group)
 
         return temp_s.replace("\\", ""), match_mask
 
@@ -64,7 +70,7 @@ class Recognizer(StrfCodes):
 
         """
         for unmatched, span in self._retrieve_unmatched(s, match_mask):
-            matched = self._check_codes(self._split_format_components(unmatched))
+            matched = self._match_single_code(self._split_format_components(unmatched))
             s = s[: span[0]] + matched + s[span[1] :]
         return s
 
@@ -92,7 +98,7 @@ class Recognizer(StrfCodes):
 
         return [s[index[i - 1] : index[i]] for i, _ in enumerate(index[1:], 1)]
 
-    def _check_codes(self, split_str: List[str]) -> str:
+    def _match_single_code(self, split_str: List[str]) -> str:
         """
         Method recognizes the single strf-codes in elements of the list containing split input text. Then replaces
         recognized parts with specific codes.
@@ -109,7 +115,6 @@ class Recognizer(StrfCodes):
 
         """
         codes = []
-        used_types = []
         for idx, elem in enumerate(split_str):
             elem_codes = []
             if re.search(r"\W", elem) or elem.lower() in self.IGNORABLE:
@@ -119,7 +124,7 @@ class Recognizer(StrfCodes):
             nxt = split_str[idx + 1].lower() if idx < len(split_str) - 1 else ""
             exp = prev + elem.lower() + nxt
             for code in self.BASIC_CODES.keys():
-                if self._get_type(code) in used_types:
+                if self._get_type(code) in self.matched_types:
                     continue
                 match = re.search(self._get_regex(code, "True"), exp)
                 if not match:
@@ -134,17 +139,20 @@ class Recognizer(StrfCodes):
                 codes.append(elem)
                 continue
             codes.append(elem_codes[0][0])
-            used_types.append(elem_codes[0][2])
+            self.matched_types.append(elem_codes[0][2])
 
         return "".join(codes)
 
     def decode_format(self, decoded_string: str):
-        decoded_string, match_mask = self._recognize_common_patterns(decoded_string)
+        self.matched_types = []
+        decoded_string, match_mask = self._match_patterns(decoded_string)
         decoded_string = self._recognize_single_codes(decoded_string, match_mask)
         return decoded_string
 
     @staticmethod
-    def _retrieve_unmatched(s: str, match_mask: str) -> List[Tuple[str, Tuple[int, int]]]:
+    def _retrieve_unmatched(
+        s: str, match_mask: str
+    ) -> List[Tuple[str, Tuple[int, int]]]:
         """
         Method responsible for retrieving unmatched parts of the input string, and returns them as a list of tuples,
         containing unmatched part of string and its span (as a tuple of integers).

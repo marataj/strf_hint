@@ -4,7 +4,36 @@ This module contains datetime codes.
 """
 import functools
 import re
-from typing import Literal, Optional
+from enum import Enum
+from typing import List, Literal, Optional
+
+
+class FieldTypes(Enum):
+    """
+    Enumerate describes the available types of Strf codes fields.
+
+    """
+
+    # Time
+    HOURS = 1
+    MINUTES = 2
+    SECONDS = 3
+    MICROSECONDS = 4
+    AM_PM = 5
+    TIMEZONE = 6
+
+    # Date
+    DAY_NAME = 7
+    MONTHDAY_NUM = 8
+    WEEKDAY_NUM = 9
+    YEARDAY_NUM = 10
+    WEEK_NUM = 11
+    MONTH_NUM = 12
+    MONTH_NAME = 13
+    YEAR = 14
+
+    # Other
+    LITERAL = 15
 
 
 class StrfCodes:
@@ -13,11 +42,12 @@ class StrfCodes:
 
     """
 
+    # TODO: Add field types also in the common formats. Implement types as enum, to keep consistency
     BASIC_CODES = {
         "%a": {
             "description": "Weekday as locale’s abbreviated name.",
             "example": "Sun",
-            "type": "day",
+            "type": FieldTypes.DAY_NAME,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": r"|".join(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
@@ -25,7 +55,7 @@ class StrfCodes:
         "%A": {
             "description": "Weekday as locale’s full name.",
             "example": "Sunday",
-            "type": "day",
+            "type": FieldTypes.DAY_NAME,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": r"|".join(
@@ -43,7 +73,7 @@ class StrfCodes:
         "%b": {
             "description": "Month as locale’s abbreviated name.",
             "example": "Sep",
-            "type": "month",
+            "type": FieldTypes.MONTH_NAME,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": "|".join(
@@ -66,7 +96,7 @@ class StrfCodes:
         "%B": {
             "description": "Month as locale’s full name.",
             "example": "September",
-            "type": "month",
+            "type": FieldTypes.MONTH_NAME,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": "|".join(
@@ -89,7 +119,7 @@ class StrfCodes:
         "%m": {
             "description": "Month as a zero-padded decimal number.",
             "example": "09",
-            "type": "month number",
+            "type": FieldTypes.MONTH_NUM,
             "prefix": r"[-/.]?\b",
             "suffix": r"\b[-/.]?",
             "regex": r"0[1-9]|1[0-2]",
@@ -97,7 +127,7 @@ class StrfCodes:
         "%-m": {
             "description": "Month as a decimal number. (Platform specific)",
             "example": "9",
-            "type": "month number",
+            "type": FieldTypes.MONTH_NUM,
             "prefix": r"[-/.]?\b",
             "suffix": r"\b[-/.]?",
             "regex": "[0-9]|1[0-2]",
@@ -105,7 +135,7 @@ class StrfCodes:
         "%Y": {
             "description": "Year with century as a decimal number.",
             "example": "2013",
-            "type": "year",
+            "type": FieldTypes.YEAR,
             "prefix": r"[-/.]?\b",
             "suffix": r"\b[-/.]?",
             "regex": r"\d{3,4}",
@@ -113,7 +143,7 @@ class StrfCodes:
         "%d": {
             "description": "Day of the month as a zero-padded decimal number.",
             "example": "08",
-            "type": "day number",
+            "type": FieldTypes.MONTHDAY_NUM,
             "prefix": r"[-/.]?\b",
             "suffix": r"(th)?\b[-/.]?",
             "regex": "0[1-9]|[1-2][0-9]|3[0-1]",
@@ -121,7 +151,7 @@ class StrfCodes:
         "%-d": {
             "description": "Day of the month as a decimal number. (Platform specific)",
             "example": "8",
-            "type": "day number",
+            "type": FieldTypes.MONTHDAY_NUM,
             "prefix": r"[-/.]?\b",
             "suffix": r"(th)?\b[-/.]?",
             "regex": "[1-9]|[1-2][0-9]|[0-1]",
@@ -129,7 +159,7 @@ class StrfCodes:
         "%H": {
             "description": "Hour (24-hour clock) as a zero-padded decimal number.",
             "example": "07",
-            "type": "hour",
+            "type": FieldTypes.HOURS,
             "prefix": r":?\b",
             "suffix": r"\b:?",
             "regex": "0[0-9]|1[0-9]|2[0-4]",
@@ -137,7 +167,7 @@ class StrfCodes:
         "%-H": {
             "description": "Hour (24-hour clock) as a decimal number. (Platform specific)",
             "example": "7",
-            "type": "hour",
+            "type": FieldTypes.HOURS,
             "prefix": r":?\b",
             "suffix": r"\b:?",
             "regex": r"[0-9]|1[0-9]|2[0-4]",
@@ -145,7 +175,7 @@ class StrfCodes:
         "%I": {
             "description": "Hour (12-hour clock) as a zero-padded decimal number.",
             "example": "07",
-            "type": "hour",
+            "type": FieldTypes.HOURS,
             "prefix": r":?\b",
             "suffix": r"(am|pm)?\b:?",
             "regex": r"0[0-9]|1[0-2]",
@@ -153,7 +183,7 @@ class StrfCodes:
         "%-I": {
             "description": "Hour (12-hour clock) as a decimal number. (Platform specific)",
             "example": "7",
-            "type": "hour",
+            "type": FieldTypes.HOURS,
             "prefix": r":?\b",
             "suffix": r"(am|pm)?\b:?",
             "regex": r"[0-9]|1[0-2]",
@@ -161,7 +191,7 @@ class StrfCodes:
         "%p": {
             "description": "Locale’s equivalent of either AM or PM.",
             "example": "AM",
-            "type": "am/pm",
+            "type": FieldTypes.AM_PM,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": r"am|pm",
@@ -169,7 +199,7 @@ class StrfCodes:
         "%M": {
             "description": "Minute as a zero-padded decimal number.",
             "example": "06",
-            "type": "minute",
+            "type": FieldTypes.MINUTES,
             "prefix": r":?\b",
             "suffix": r"(am|pm)?\b:?",
             "regex": r"0[0-9]|[1-5][0-9]",
@@ -177,7 +207,7 @@ class StrfCodes:
         "%-M": {
             "description": "Minute as a decimal number. (Platform specific)",
             "example": "6",
-            "type": "minute",
+            "type": FieldTypes.MINUTES,
             "prefix": r":?\b",
             "suffix": r"(am|pm)?\b:?",
             "regex": r"[0-9]|[1-5][0-9]",
@@ -185,7 +215,7 @@ class StrfCodes:
         "%S": {
             "description": "Second as a zero-padded decimal number.",
             "example": "05",
-            "type": "second",
+            "type": FieldTypes.SECONDS,
             "prefix": r":?\b",
             "suffix": r"(am|pm)?\b:?",
             "regex": r"0[0-9]|[1-5][0-9]",
@@ -193,7 +223,7 @@ class StrfCodes:
         "%-S": {
             "description": "Second as a decimal number. (Platform specific)",
             "example": "5",
-            "type": "second",
+            "type": FieldTypes.SECONDS,
             "prefix": r":?\b",
             "suffix": r"(am|pm)?\b:?",
             "regex": r"[0-9]|[1-5][0-9]",
@@ -201,7 +231,7 @@ class StrfCodes:
         "%f": {
             "description": "Microsecond as a decimal number, zero-padded to 6 digits.",
             "example": 0,
-            "type": "microsecond",
+            "type": FieldTypes.MICROSECONDS,
             "prefix": r":?\b",
             "suffix": r"\b:?",
             "regex": r"\d{6}",
@@ -209,7 +239,7 @@ class StrfCodes:
         "%Z": {
             "description": "Time zone name (empty string if the object is naive).",
             "example": "UTC",
-            "type": "timezone",
+            "type": FieldTypes.TIMEZONE,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": "|".join(
@@ -429,7 +459,7 @@ class StrfCodes:
         "%j": {
             "description": "Day of the year as a zero-padded decimal number.",
             "example": "251",
-            "type": "yearday",
+            "type": FieldTypes.YEARDAY_NUM,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": r"00\d|0\d\d|[1-2]\d\d|3[0-6][0-6]",
@@ -437,7 +467,7 @@ class StrfCodes:
         "%-j": {
             "description": "Day of the year as a decimal number. (Platform specific)",
             "example": "251",
-            "type": "yearday",
+            "type": FieldTypes.YEARDAY_NUM,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": r"\d|\d\d|[1-2]\d{2}|3[0-6]{2}",
@@ -445,7 +475,7 @@ class StrfCodes:
         "%U": {
             "description": "Week number of the year (Sunday as the first day of the week) as a zero-padded decimal number. All days in a new year preceding the first Sunday are considered to be in week 0.",
             "example": "36",
-            "type": "week number",
+            "type": FieldTypes.WEEK_NUM,
             "prefix": r"\b(cw|wk)?",
             "suffix": r"(cw|wk)?\b",
             "regex": r"0\d|[1-4]\d|5[0-4]",
@@ -453,7 +483,7 @@ class StrfCodes:
         "%-U": {
             "description": "Week number of the year (Sunday as the first day of the week) as a decimal number. All days in a new year preceding the first Sunday are considered to be in week 0. (Platform specific)",
             "example": "36",
-            "type": "week number",
+            "type": FieldTypes.WEEK_NUM,
             "prefix": r"\b(cw|wk)?",
             "suffix": r"(cw|wk)?\b",
             "regex": r"\d|[1-4]\d|5[0-4]",
@@ -461,7 +491,7 @@ class StrfCodes:
         "%W": {
             "description": "Week number of the year (Monday as the first day of the week) as a zero-padded decimal number. All days in a new year preceding the first Monday are considered to be in week 0.",
             "example": "35",
-            "type": "week number",
+            "type": FieldTypes.WEEK_NUM,
             "prefix": r"\b(cw|wk)?",
             "suffix": r"(cw|wk)?\b",
             "regex": r"0\d|[1-4]|5[0-4]",
@@ -469,7 +499,7 @@ class StrfCodes:
         "%-W": {
             "description": "Week number of the year (Monday as the first day of the week) as a decimal number. All days in a new year preceding the first Monday are considered to be in week 0. (Platform specific)",
             "example": "35",
-            "type": "week number",
+            "type": FieldTypes.WEEK_NUM,
             "prefix": r"\b(cw|wk)?",
             "suffix": r"(cw|wk)?\b",
             "regex": r"\d|[1-4]\d|5[0-4]",
@@ -477,7 +507,7 @@ class StrfCodes:
         "%w": {
             "description": "Weekday as a decimal number, where 0 is Sunday and 6 is Saturday.",
             "example": "0",
-            "type": "weekday number",
+            "type": FieldTypes.WEEKDAY_NUM,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": r"[0-6]",
@@ -485,7 +515,7 @@ class StrfCodes:
         "%y": {
             "description": "Year without century as a zero-padded decimal number.",
             "example": "13",
-            "type": "year",
+            "type": FieldTypes.YEAR,
             "prefix": r"[-/.]?\b",
             "suffix": r"\b[-/.]?",
             "regex": r"0\d|\d\d",
@@ -514,7 +544,7 @@ class StrfCodes:
         "%%": {
             "description": "A literal '%' character.",
             "example": "%",
-            "type": "literal",
+            "type": FieldTypes.LITERAL,
             "prefix": r"\b",
             "suffix": r"\b",
             "regex": "%",
@@ -788,6 +818,27 @@ class StrfCodes:
         return self.BASIC_CODES[code]["type"]
 
     @functools.lru_cache
+    def _get_format_types(self, codes: str) -> List[str]:
+        """
+        Method responsible for retrieving a list of types of the strf-codes contained in `codes` string.
+
+        Parameters
+        ----------
+        codes `str`
+            String containing multiple strf-codes.
+
+        Returns
+        -------
+        `List`[`str`]
+            List with types of strf-codes contained in the `codes` string.
+
+        """
+        return [
+            self._get_type(match.group())
+            for match in re.finditer("|".join(self.BASIC_CODES.keys()), codes)
+        ]
+
+    @functools.lru_cache
     def _generate_format_regex(self, code_group: str) -> str:
         """
         Method responsible for generating regular expressions for predefined common strf formats.
@@ -806,6 +857,7 @@ class StrfCodes:
         for match in re.finditer("|".join(self.BASIC_CODES.keys()), code_group):
             code = match.group()
             regex = f"({self._get_regex(code)})"
+
             if regex:
                 code_group = code_group.replace(code, regex)
 
