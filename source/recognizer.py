@@ -1,3 +1,7 @@
+"""
+This module contains the recognizer class, responsible for encoding the string input with specific strf-codes.
+
+"""
 import functools
 import re
 import string
@@ -21,8 +25,12 @@ class Recognizer:
             Instance of the codes container class.
 
         """
-        self.matched_types: List[FieldTypes] = []  # types of the strf codes, that were matched in the single decode.
-        self.matched_mask: str = ""  # mask of the matched signs, that corresponds to the input string.
+        self.matched_types: List[
+            FieldTypes
+        ] = []  # types of the strf codes, that were matched in the single encoding.
+        self.matched_mask: str = (
+            ""  # mask of the matched signs, that corresponds to the input string.
+        )
         self.codes = codes
 
     def _match_patterns(self, s: str) -> Tuple[str, str]:
@@ -32,7 +40,7 @@ class Recognizer:
         Parameters
         ----------
         s: `str`
-            Input text to be decoded with strf-codes.
+            Input text to be encoded using strf-codes.
 
         Returns
         -------
@@ -62,7 +70,7 @@ class Recognizer:
         Parameters
         ----------
         s: `str`
-            Input text to be decoded.
+            Input text to be encoded with the strf-codes.
 
         Returns
         -------
@@ -132,7 +140,11 @@ class Recognizer:
                     match = re.search(self.codes.get_regex(code, "True"), elem.lower())
                 if match:
                     elem_codes.append(
-                        (code, match.span()[1] - match.span()[0], self.codes.get_type(code))
+                        (
+                            code,
+                            match.span()[1] - match.span()[0],
+                            self.codes.get_type(code),
+                        )
                     )
             if len(set([i[1] for i in elem_codes])) != 1:
                 elem_codes = sorted(elem_codes, key=lambda el: el[1], reverse=True)
@@ -144,9 +156,7 @@ class Recognizer:
 
         return "".join(codes)
 
-    def _retrieve_unmatched(
-        self, s: str
-    ) -> List[Tuple[str, Tuple[int, int]]]:
+    def _retrieve_unmatched(self, s: str) -> List[Tuple[str, Tuple[int, int]]]:
         """
         Method responsible for retrieving unmatched parts of the input string, and returns them as a list of tuples,
         containing unmatched part of string and its span (as a tuple of integers).
@@ -169,14 +179,29 @@ class Recognizer:
             for r in re.finditer("0+", self.matched_mask)
         ]
 
-    def decode_format(self, decoded_string: str):
+    def encode_format(self, encoded_string: str) -> str:
+        """
+        Method responsible for encoding the user input string, using strf-codes.
+        Parameters
+        ----------
+        encoded_string: `str`:
+            Input text to be encoded using specific strf-codes.
+
+        Returns
+        -------
+        `str`
+            Input string encoded with the proper strf-codes.
+
+        """
         self.matched_types = []  # reset types container
         # self.matched_mask indicates which signs of the input text were matched with specific strf-codes
         # 0 means unmatched sign; 1 means matched sign
-        self.matched_mask = "0" * len(decoded_string)  # reset mask, set its length to the length of the input string
-        decoded_string = self._match_patterns(decoded_string)
-        decoded_string = self._recognize_single_codes(decoded_string)
-        return decoded_string
+        self.matched_mask = "0" * len(
+            encoded_string
+        )  # reset mask, set its length to the length of the input string
+        encoded_string = self._match_patterns(encoded_string)
+        encoded_string = self._recognize_single_codes(encoded_string)
+        return encoded_string
 
     @staticmethod
     @functools.lru_cache
