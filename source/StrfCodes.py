@@ -768,7 +768,7 @@ class StrfCodes:
     ]
 
     @functools.lru_cache
-    def _get_regex(
+    def get_regex(
         self,
         code: str,
         affix: Optional[Literal["False", "Word-border", "True"]] = "False",
@@ -801,7 +801,7 @@ class StrfCodes:
             return None
 
     @functools.lru_cache
-    def _get_type(self, code: str) -> str:
+    def get_type(self, code: str) -> str:
         """
         Method responsible for retrieving a type of particular strf-code.
 
@@ -818,7 +818,7 @@ class StrfCodes:
         return self.BASIC_CODES[code]["type"]
 
     @functools.lru_cache
-    def _get_format_types(self, codes: str) -> List[str]:
+    def get_format_types(self, codes: str) -> List[str]:
         """
         Method responsible for retrieving a list of types of the strf-codes contained in `codes` string.
 
@@ -834,12 +834,12 @@ class StrfCodes:
 
         """
         return [
-            self._get_type(match.group())
+            self.get_type(match.group())
             for match in re.finditer("|".join(self.BASIC_CODES.keys()), codes)
         ]
 
     @functools.lru_cache
-    def _generate_format_regex(self, code_group: str) -> str:
+    def generate_format_regex(self, code_group: str) -> str:
         """
         Method responsible for generating regular expressions for predefined common strf formats.
 
@@ -856,7 +856,7 @@ class StrfCodes:
         """
         for match in re.finditer("|".join(self.BASIC_CODES.keys()), code_group):
             code = match.group()
-            regex = f"({self._get_regex(code)})"
+            regex = f"({self.get_regex(code)})"
 
             if regex:
                 code_group = code_group.replace(code, regex)

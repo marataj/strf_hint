@@ -1,20 +1,28 @@
 import functools
 import re
 import string
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from source.StrfCodes import FieldTypes, StrfCodes
 
 
-class Recognizer(StrfCodes):
+class Recognizer:
     """
     Class responsible for recognizing the strf-codes and decoding the patterns.
 
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, codes: Optional[StrfCodes] = StrfCodes()):
+        """
+        Initialization of the `Recognizer` class.
+        Parameters
+        ----------
+        codes: Optional[`StrfCodes`], default StrfCodes()
+            Instance of the codes container class.
+
+        """
         self.matched_types: List[FieldTypes] = []
+        self.codes = codes
 
     def _match_patterns(self, s: str) -> Tuple[str, str]:
         """
@@ -36,8 +44,8 @@ class Recognizer(StrfCodes):
         temp_s = s
         match_mask = "0" * len(s)
 
-        for group in self.DATE_COMMON_FORMATS + self.TIME_COMMON_FORMATS:
-            group_regex = self._generate_format_regex(group)
+        for group in self.codes.DATE_COMMON_FORMATS + self.codes.TIME_COMMON_FORMATS:
+            group_regex = self.codes.generate_format_regex(group)
             match = re.search(group_regex, temp_s.lower())
             if match:
                 temp_s = temp_s[: match.span()[0]] + group + temp_s[match.span()[1] :]
@@ -46,7 +54,7 @@ class Recognizer(StrfCodes):
                     + "1" * len(group)
                     + match_mask[match.span()[1] :]
                 )
-                self.matched_types += self._get_format_types(group)
+                self.matched_types += self.codes.get_format_types(group)
 
         return temp_s.replace("\\", ""), match_mask
 
@@ -117,21 +125,21 @@ class Recognizer(StrfCodes):
         codes = []
         for idx, elem in enumerate(split_str):
             elem_codes = []
-            if re.search(r"\W", elem) or elem.lower() in self.IGNORABLE:
+            if re.search(r"\W", elem) or elem.lower() in self.codes.IGNORABLE:
                 codes.append(elem)
                 continue
             prev = split_str[idx - 1].lower() if idx != 0 else ""
             nxt = split_str[idx + 1].lower() if idx < len(split_str) - 1 else ""
             exp = prev + elem.lower() + nxt
-            for code in self.BASIC_CODES.keys():
-                if self._get_type(code) in self.matched_types:
+            for code in self.codes.BASIC_CODES.keys():
+                if self.codes.get_type(code) in self.matched_types:
                     continue
-                match = re.search(self._get_regex(code, "True"), exp)
+                match = re.search(self.codes.get_regex(code, "True"), exp)
                 if not match:
-                    match = re.search(self._get_regex(code, "True"), elem.lower())
+                    match = re.search(self.codes.get_regex(code, "True"), elem.lower())
                 if match:
                     elem_codes.append(
-                        (code, match.span()[1] - match.span()[0], self._get_type(code))
+                        (code, match.span()[1] - match.span()[0], self.codes.get_type(code))
                     )
             if len(set([i[1] for i in elem_codes])) != 1:
                 elem_codes = sorted(elem_codes, key=lambda el: el[1], reverse=True)
@@ -139,6 +147,7 @@ class Recognizer(StrfCodes):
                 codes.append(elem)
                 continue
             codes.append(elem_codes[0][0])
+            # TODO: replace with FieldTypes
             self.matched_types.append(elem_codes[0][2])
 
         return "".join(codes)
