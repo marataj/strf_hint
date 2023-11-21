@@ -33,7 +33,7 @@ class Recognizer:
         )
         self.codes = codes
 
-    def _match_patterns(self, s: str) -> Tuple[str, str]:
+    def _match_patterns(self, s: str) -> str:
         """
         Method responsible for recognizing predefined common patterns of strf-codes.
 
