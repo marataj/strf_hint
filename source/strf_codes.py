@@ -815,7 +815,10 @@ class StrfCodes:
         `FieldTypes`
             Type of a particular code.
         """
-        return self.BASIC_CODES[code]["type"]
+        try:
+            return self.BASIC_CODES[code]["type"]
+        except KeyError:
+            return None
 
     @functools.lru_cache
     def get_format_types(self, codes: str) -> List[str]:
