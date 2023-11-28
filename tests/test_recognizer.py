@@ -110,6 +110,30 @@ def test_check_string_group(char, group, recognizer):
                 "test",
             ],
         ),
+        (
+            "2023-11-28, 11:38",
+            ["2023", "-", "11", "-", "28", ",", " ", "11", ":", "38"],
+        ),
+        (
+            "Sunday2023_March_22_CW12_10_20_PM",
+            [
+                "Sunday",
+                "2023",
+                "_",
+                "March",
+                "_",
+                "22",
+                "_",
+                "CW",
+                "12",
+                "_",
+                "10",
+                "_",
+                "20",
+                "_",
+                "PM",
+            ],
+        ),
     ],
 )
 def test_split_format_components(text, exp_result, recognizer):
@@ -145,3 +169,17 @@ def test_recognize_single_codes(
     recognizer.matched_mask = matched_mask
     recognizer.matched_types = matched_types
     assert recognizer._recognize_single_codes(input_str) == exp_result
+
+
+@pytest.mark.parametrize(
+    "input_str, exp_result",
+    [
+        ("2022-04-12, sunday, 14:30", "%Y-%m-%d, %A, %H:%M"),
+        ("March 11th 2023 9:30 PM", "%B %dth %Y %-I:%M %p"),
+        ("19:19:19.100000", "%H:%M:%S.%f"),
+        ("WK30, 2023", "WK%U, %Y"),
+        ("(22:13), today is tuesday, 18 Mar 2020", "(%H:%M), today is %A, %d %b %Y"),
+    ],
+)
+def test_encode_format(input_str, exp_result, recognizer):
+    assert recognizer.encode_format(input_str) == exp_result
