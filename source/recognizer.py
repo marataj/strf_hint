@@ -78,17 +78,13 @@ class Recognizer:
             Input text with recognized part replaced with the proper strf-codes.
 
         """
-        # TODO: Fix bug consist in variable unmatched field position of second and next unmatched parts
-        # troubles start in 2nd and higher iteration, if first field have not the same length before and after
-        # single code based encoding. It's related to lack of updating the mask in this function.
-
         loop = True
         while loop:
             loop = False
             for unmatched, span in self._retrieve_unmatched(s):
                 mask_before = self.matched_mask
                 matched = self._match_single_code(
-                    self._split_format_components(unmatched)
+                    self._split_format_components(unmatched), span
                 )
                 s = s[: span[0]] + matched + s[span[1] :]
                 if mask_before != self.matched_mask:
@@ -145,6 +141,7 @@ class Recognizer:
             elem_codes = []
             if re.search(r"\W", elem) or elem.lower() in self.codes.IGNORABLE:
                 codes.append(elem)
+                mask.append("0" * len(elem))
                 continue
             prev = split_str[idx - 1].lower() if idx != 0 else ""
             nxt = split_str[idx + 1].lower() if idx < len(split_str) - 1 else ""

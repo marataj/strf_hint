@@ -178,7 +178,8 @@ def test_recognize_single_codes(
         ("March 11th 2023 9:30 PM", "%B %dth %Y %-I:%M %p"),
         ("19:19:19.100000", "%H:%M:%S.%f"),
         ("WK30, 2023", "WK%U, %Y"),
-        ("(22:13), today is tuesday, 18 Mar 2020", "(%H:%M), today is %A, %d %b %Y"),
+        ("(22:13), today is tuesday, 18 Mar 2021", "(%H:%M), today is %A, %d %b %Y"),
+        ("Day: Sunday, 2022-Nov-30, 9:30 PM", "Day: %A, %Y-%b-%d, %-I:%M %p")
     ],
 )
 def test_encode_format(input_str, exp_result, recognizer):
