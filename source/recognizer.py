@@ -78,9 +78,23 @@ class Recognizer:
             Input text with recognized part replaced with the proper strf-codes.
 
         """
-        for unmatched, span in self._retrieve_unmatched(s):
-            matched = self._match_single_code(self._split_format_components(unmatched))
-            s = s[: span[0]] + matched + s[span[1] :]
+        # TODO: Fix bug consist in variable unmatched field position of second and next unmatched parts
+        # troubles start in 2nd and higher iteration, if first field have not the same length before and after
+        # single code based encoding. It's related to lack of updating the mask in this function.
+
+        loop = True
+        while loop:
+            loop = False
+            for unmatched, span in self._retrieve_unmatched(s):
+                mask_before = self.matched_mask
+                matched = self._match_single_code(
+                    self._split_format_components(unmatched)
+                )
+                s = s[: span[0]] + matched + s[span[1] :]
+                if mask_before != self.matched_mask:
+                    loop = True
+                    break
+
         return s
 
     def _split_format_components(self, s: str) -> List[str]:
@@ -107,7 +121,9 @@ class Recognizer:
 
         return [s[index[i - 1] : index[i]] for i, _ in enumerate(index[1:], 1)]
 
-    def _match_single_code(self, split_str: List[str]) -> str:
+    def _match_single_code(
+        self, split_str: List[str], str_span: Tuple[int, int] = None
+    ) -> str:
         """
         Method recognizes the single strf-codes in elements of the list containing split input text. Then replaces
         recognized parts with specific codes.
@@ -124,6 +140,7 @@ class Recognizer:
 
         """
         codes = []
+        mask = []
         for idx, elem in enumerate(split_str):
             elem_codes = []
             if re.search(r"\W", elem) or elem.lower() in self.codes.IGNORABLE:
@@ -150,9 +167,20 @@ class Recognizer:
                 elem_codes = sorted(elem_codes, key=lambda el: el[1], reverse=True)
             if not any(elem_codes):
                 codes.append(elem)
+                mask.append("0" * len(elem))
                 continue
             codes.append(elem_codes[0][0])
+            mask.append("1" * len(elem_codes[0][0]))
+
             self.matched_types.append(elem_codes[0][2])
+
+        full_mask = "".join(mask)
+        if str_span:
+            self.matched_mask = (
+                self.matched_mask[: str_span[0]]
+                + full_mask
+                + self.matched_mask[str_span[1] :]
+            )
 
         return "".join(codes)
 
