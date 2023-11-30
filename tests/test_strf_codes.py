@@ -5,7 +5,7 @@ Module containing unit tests for strf_codes.py module.
 
 import pytest
 
-from source.strf_codes import FieldTypes, StrfCodes
+from strf_hint.strf_codes import FieldTypes, StrfCodes
 
 
 @pytest.fixture()

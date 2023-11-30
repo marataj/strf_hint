@@ -15,7 +15,6 @@ In order to transform custom datetime format into strf-codes-containing format, 
 >>> r = Recognizer()
 >>> r.encode_format("Day: Sunday, 2022-Nov-30, 9:30 PM")
 'Day: %A, %Y-%b-%d, %-I:%M %p'
-
 ```
 
 

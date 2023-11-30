@@ -7,7 +7,7 @@ import re
 import string
 from typing import List, Optional, Tuple
 
-from source.strf_codes import FieldTypes, StrfCodes
+from strf_hint.strf_codes import FieldTypes, StrfCodes
 
 
 class Recognizer:
@@ -25,13 +25,9 @@ class Recognizer:
             Instance of the codes container class.
 
         """
-        self.matched_types: List[
-            FieldTypes
-        ] = []  # types of the strf codes, that were matched in the single encoding.
-        self.matched_mask: str = (
-            ""  # mask of the matched signs, that corresponds to the input string.
-        )
-        self.codes = codes
+        self._matched_types: List[FieldTypes] = []  # types of the strf codes, that were matched in the single encoding.
+        self._matched_mask: str = ""  # mask of the matched signs, that corresponds to the input string.
+        self._codes = codes
 
     def _match_patterns(self, s: str) -> str:
         """
@@ -49,17 +45,17 @@ class Recognizer:
 
         """
         temp_s = s
-        for group in self.codes.DATE_COMMON_FORMATS + self.codes.TIME_COMMON_FORMATS:
-            group_regex = self.codes.generate_format_regex(group)
+        for group in self._codes.DATE_COMMON_FORMATS + self._codes.TIME_COMMON_FORMATS:
+            group_regex = self._codes.generate_format_regex(group)
             match = re.search(group_regex, temp_s.lower())
             if match:
                 temp_s = temp_s[: match.span()[0]] + group + temp_s[match.span()[1] :]
-                self.matched_mask = (
-                    self.matched_mask[: match.span()[0]]
+                self._matched_mask = (
+                    self._matched_mask[: match.span()[0]]
                     + "1" * len(group)
-                    + self.matched_mask[match.span()[1] :]
+                    + self._matched_mask[match.span()[1] :]
                 )
-                self.matched_types += self.codes.get_format_types(group)
+                self._matched_types += self._codes.get_format_types(group)
 
         return temp_s.replace("\\", "")
 
@@ -82,12 +78,12 @@ class Recognizer:
         while loop:
             loop = False
             for unmatched, span in self._retrieve_unmatched(s):
-                mask_before = self.matched_mask
+                mask_before = self._matched_mask
                 matched = self._match_single_code(
                     self._split_format_components(unmatched), span
                 )
                 s = s[: span[0]] + matched + s[span[1] :]
-                if mask_before != self.matched_mask:
+                if mask_before != self._matched_mask:
                     loop = True
                     break
 
@@ -129,6 +125,9 @@ class Recognizer:
         split_str: `List`[`str`]
             List containing input text split into sign-groups.
 
+        str_span: `Tuple` [`int`, `int`], optional
+            Optional parameter, indicates currently analyzed part of entire input string.
+
         Returns
         -------
         `str`
@@ -139,25 +138,25 @@ class Recognizer:
         mask = []
         for idx, elem in enumerate(split_str):
             elem_codes = []
-            if re.search(r"\W", elem) or elem.lower() in self.codes.IGNORABLE:
+            if re.search(r"\W", elem) or elem.lower() in self._codes.IGNORABLE:
                 codes.append(elem)
                 mask.append("0" * len(elem))
                 continue
             prev = split_str[idx - 1].lower() if idx != 0 else ""
             nxt = split_str[idx + 1].lower() if idx < len(split_str) - 1 else ""
             exp = prev + elem.lower() + nxt
-            for code in self.codes.BASIC_CODES.keys():
-                if self.codes.get_type(code) in self.matched_types:
+            for code in self._codes.BASIC_CODES.keys():
+                if self._codes.get_type(code) in self._matched_types:
                     continue
-                match = re.search(self.codes.get_regex(code, "True"), exp)
+                match = re.search(self._codes.get_regex(code, "True"), exp)
                 if not match:
-                    match = re.search(self.codes.get_regex(code, "True"), elem.lower())
+                    match = re.search(self._codes.get_regex(code, "True"), elem.lower())
                 if match:
                     elem_codes.append(
                         (
                             code,
                             match.span()[1] - match.span()[0],
-                            self.codes.get_type(code),
+                            self._codes.get_type(code),
                         )
                     )
             if len(set([i[1] for i in elem_codes])) != 1:
@@ -169,14 +168,14 @@ class Recognizer:
             codes.append(elem_codes[0][0])
             mask.append("1" * len(elem_codes[0][0]))
 
-            self.matched_types.append(elem_codes[0][2])
+            self._matched_types.append(elem_codes[0][2])
 
         full_mask = "".join(mask)
         if str_span:
-            self.matched_mask = (
-                self.matched_mask[: str_span[0]]
+            self._matched_mask = (
+                self._matched_mask[: str_span[0]]
                 + full_mask
-                + self.matched_mask[str_span[1] :]
+                + self._matched_mask[str_span[1] :]
             )
 
         return "".join(codes)
@@ -200,8 +199,8 @@ class Recognizer:
 
         """
         return [
-            (s[r.span()[0] : r.span()[1]], r.span())
-            for r in re.finditer("0+", self.matched_mask)
+            (s[r.span()[0]:r.span()[1]], r.span())
+            for r in re.finditer("0+", self._matched_mask)
         ]
 
     def encode_format(self, encoded_string: str) -> str:
@@ -218,10 +217,10 @@ class Recognizer:
             Input string encoded with the proper strf-codes.
 
         """
-        self.matched_types = []  # reset types container
-        # self.matched_mask indicates which signs of the input text were matched with specific strf-codes
+        self._matched_types = []  # reset types container
+        # self._matched_mask indicates which signs of the input text were matched with specific strf-codes
         # 0 means unmatched sign; 1 means matched sign
-        self.matched_mask = "0" * len(
+        self._matched_mask = "0" * len(
             encoded_string
         )  # reset mask, set its length to the length of the input string
         encoded_string = self._match_patterns(encoded_string)

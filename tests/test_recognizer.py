@@ -6,8 +6,8 @@ import string
 
 import pytest
 
-from source.recognizer import Recognizer
-from source.strf_codes import FieldTypes
+from strf_hint.recognizer import Recognizer
+from strf_hint.strf_codes import FieldTypes
 
 
 @pytest.fixture
@@ -53,14 +53,14 @@ def recognizer():
     ],
 )
 def test_match_patterns(input_str, exp_output, exp_mask, exp_types, recognizer):
-    recognizer.matched_mask = "0" * len(input_str)
+    recognizer._matched_mask = "0" * len(input_str)
     assert recognizer._match_patterns(input_str) == exp_output
-    assert set(recognizer.matched_types) == set(exp_types)
-    assert recognizer.matched_mask == exp_mask
+    assert set(recognizer._matched_types) == set(exp_types)
+    assert recognizer._matched_mask == exp_mask
 
 
 def test_retrieve_unmatched(recognizer):
-    recognizer.matched_mask = "0011100000001111"
+    recognizer._matched_mask = "0011100000001111"
     assert recognizer._retrieve_unmatched("unhhhmatchedhhhh") == [
         ("un", (0, 2)),
         ("matched", (5, 12)),
@@ -166,8 +166,8 @@ def test_split_format_components(text, exp_result, recognizer):
 def test_recognize_single_codes(
     input_str, matched_mask, matched_types, exp_result, recognizer
 ):
-    recognizer.matched_mask = matched_mask
-    recognizer.matched_types = matched_types
+    recognizer._matched_mask = matched_mask
+    recognizer._matched_types = matched_types
     assert recognizer._recognize_single_codes(input_str) == exp_result
 
 
