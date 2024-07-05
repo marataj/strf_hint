@@ -5,6 +5,10 @@ The specific format codes can be tough to remember due to the infrequent need to
 
 **Strf_hint** is lightweight and easy to use package, responsible for encoding the datatime formats using strf codes.
 
+## Installation
+
+`pip install strf-hint`
+
 ## How to use it?
 In order to transform custom datetime format into strf-codes-containing format, follow steps below:
 
